@@ -83,6 +83,87 @@ BITBUCKET_API_TOKEN=<API トークン>
 DRY_RUN=1 SINCE_EPOCH=$(TZ=Asia/Tokyo date -j -f "%Y-%m-%d %H:%M:%S" "2026-11-02 03:00:00" +%s) ./daily_report.sh
 ```
 
+## 定期実行 (macOS / launchd)
+
+毎朝 9:00 に実行する例。
+
+### 1. plist を作成する
+
+`~/Library/LaunchAgents/com.example.daily-report.plist` を作成する。`/Users/you/...` は自分の環境のパスに置き換える。
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.example.daily-report</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/you/daily-report-generator/daily_report.sh</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/Users/you/.local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+  </dict>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>9</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>/Users/you/Library/Logs/daily-report.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/you/Library/Logs/daily-report.log</string>
+</dict>
+</plist>
+```
+
+- パスはすべて絶対パスで書く。launchd は `~` や `$HOME` を展開しないため、`~` を使うと起動に失敗する (`last exit code = 78: EX_CONFIG`)
+- launchd の PATH は `/usr/bin:/bin:/usr/sbin:/sbin` だけなので、`claude`・`gh`・`obsidian`・bash 4 以降が入っているディレクトリを `PATH` に含める。場所は `command -v claude gh obsidian bash` で確認できる
+- ログの出力先ディレクトリは事前に存在している必要がある
+
+### 2. 登録する
+
+```sh
+plutil -lint ~/Library/LaunchAgents/com.example.daily-report.plist
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.example.daily-report.plist
+```
+
+plist を書き換えたときは、一度 `bootout` してから `bootstrap` し直す。
+
+```sh
+launchctl bootout gui/$(id -u)/com.example.daily-report
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.example.daily-report.plist
+```
+
+### 3. 確認する
+
+```sh
+# 登録状態と前回の終了コード (0 なら成功)
+launchctl print gui/$(id -u)/com.example.daily-report | grep -E "^\s+(state|runs|last exit code) ="
+
+# 実行ログ
+tail -n 50 ~/Library/Logs/daily-report.log
+```
+
+`launchctl kickstart gui/$(id -u)/com.example.daily-report` で即時実行できる。ただしデイリーノートに追記されるので、試すだけなら plist の `EnvironmentVariables` に `DRY_RUN` を一時的に追加する。
+
+### 解除する
+
+```sh
+launchctl bootout gui/$(id -u)/com.example.daily-report
+rm ~/Library/LaunchAgents/com.example.daily-report.plist
+```
+
+### launchd の動作について
+
+- 9:00 にスリープしていた場合は、復帰時に 1 回実行される。電源が切れていた場合は実行されない
+- 実行時に Obsidian が起動していないと、追記に失敗する
+
 ## 注意
 
 - 同じ日に複数回実行すると、デイリーノートに重複して追記される
