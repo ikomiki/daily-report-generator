@@ -2,6 +2,7 @@
 set -euo pipefail
 
 # 対象期間の開始 (デフォルト: 前日 3:00 JST)。SINCE_EPOCH を渡せば上書き可能
+# 当日のノートに当日の作業を書くと、徹夜で日付を跨いだ作業の扱いが難しいため、前日分を翌日のノートに書く
 SINCE_EPOCH="${SINCE_EPOCH:-$(TZ=Asia/Tokyo date -v-1d -v3H -v0M -v0S +%s)}"
 SINCE_ISO=$(date -u -r "$SINCE_EPOCH" +%Y-%m-%dT%H:%M:%SZ)
 
