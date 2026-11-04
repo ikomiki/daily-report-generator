@@ -109,4 +109,5 @@ REPORT=$(
 echo "$REPORT"
 
 # obsidian CLI は content 中の \n を改行として解釈する
-[ -n "${DRY_RUN:-}" ] || obsidian daily:append heading="Yesterday's work" content="${REPORT//$'\n'/\\n}\n"
+OBSIDIAN_HEADING=${OBSIDIAN_HEADING:-"Yesterday's work"}
+[ -n "${DRY_RUN:-}" ] || obsidian daily:append heading="$OBSIDIAN_HEADING" content="${REPORT//$'\n'/\\n}\n"

@@ -1,6 +1,6 @@
 # daily-report-generator
 
-GitHub と Bitbucket から期間内の自分のコミットを集め、ブランチ単位で `claude -p` (Haiku) に要約させて、Obsidian のデイリーノートの `Yesterday's work` 見出しに追記するスクリプト。
+GitHub と Bitbucket から期間内の自分のコミットを集め、ブランチ単位で `claude -p` (Haiku) に要約させて、Obsidian のデイリーノートの `Yesterday's work` 見出し (`OBSIDIAN_HEADING` で変更可) に追記するスクリプト。
 
 当日のノートに当日の作業を書くと、徹夜で日付を跨いだ作業の扱いが難しい。そのため前日 3:00 JST 以降の作業を、翌日 (実行日) のノートに書く。
 
@@ -29,7 +29,7 @@ GitHub と Bitbucket から期間内の自分のコミットを集め、ブラ�
   - 要約に `claude -p --model haiku` を使う
 - [Obsidian](https://obsidian.md/) の CLI (`obsidian` コマンド)
   - Obsidian の設定で CLI を有効にし、Obsidian を起動しておく
-  - デイリーノートに `## Yesterday's work` 見出しがあること
+  - デイリーノートに追記先の見出し (デフォルト `## Yesterday's work`) があること
 
 ### GitHub を対象にする場合
 
@@ -73,6 +73,7 @@ BITBUCKET_API_TOKEN=<API トークン>
 | 環境変数 | 説明 | デフォルト |
 |---|---|---|
 | `SINCE_EPOCH` | 集計開始時刻 (UNIX 秒) | 前日 3:00 JST |
+| `OBSIDIAN_HEADING` | 追記先の見出し名 (`.env` でも指定可) | `Yesterday's work` |
 | `DRY_RUN` | 値があれば Obsidian に追記せず表示のみ | なし |
 | `BB_EMAIL` | Bitbucket で自分と判定するメールアドレス | `git config --global user.email` |
 
