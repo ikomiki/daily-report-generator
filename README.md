@@ -24,7 +24,7 @@ GitHub と Bitbucket から期間内の自分のコミットを集め、ブラ�
 - `bash`, `curl`, `jq`
 - [Claude Code](https://claude.com/claude-code) (`claude` コマンド) のインストールとログイン
   - 要約に `claude -p --model haiku` を使う
-- [Obsidian](https://obsidian.md/) の CLI (`obsidian` コマンド)
+- [Obsidian](https://obsidian.md/) 1.15 以降の CLI (`obsidian` コマンド)
   - Obsidian の設定で CLI を有効にし、Obsidian を起動しておく
   - デイリーノートに追記先の見出し (デフォルト `## Yesterday's work`) があること
 
