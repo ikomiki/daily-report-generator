@@ -16,7 +16,7 @@ if [ -z "${TARGET_SERVICES:-}" ]; then
   TARGET_SERVICES=GITHUB
 fi
 read -ra ORGS <<< "${GITHUB_ORGS:-}"
-# Bitbucket はアカウントではなくコミットのメールアドレスで自分を判定する
+# Bitbucket はアカウントではなくコミットのメールアドレスで自分を判定する (空白区切りで複数指定可)
 BB_EMAIL="${BB_EMAIL:-$(git config --global user.email)}"
 
 # トークンを引数に直接書くと ps に出るので、ヘッダーはファイル経由で渡す
@@ -61,10 +61,10 @@ bitbucket_commits() {
               url="$api/$repo/commits/$(uri "$branch")?pagelen=100"
               while [ -n "$url" ]; do
                 page=$(bb "$url")
-                jq -r --arg repo "$repo" --arg branch "$branch" --arg email "$BB_EMAIL" --argjson since "$SINCE_EPOCH" \
-                  '.values[] | select((.date[:19] + "Z" | fromdate) >= $since
+                jq -r --arg repo "$repo" --arg branch "$branch" --arg emails "$BB_EMAIL" --argjson since "$SINCE_EPOCH" \
+                  '.values[] | .author.raw as $raw | select((.date[:19] + "Z" | fromdate) >= $since
                       and (.parents | length) < 2
-                      and (.author.raw | contains("<" + $email + ">")))
+                      and any($emails | scan("\\S+"); "<" + . + ">" | inside($raw)))
                     | ["BitBucket", $repo, $branch, .hash[:7], .date, (.message | split("\n")[0])] | @tsv' <<< "$page"
                 # トポロジカル順で日時は厳密に単調ではないので、ページ全体が期間外になったら打ち切る
                 url=$(jq -r --argjson since "$SINCE_EPOCH" \
@@ -97,12 +97,11 @@ REPORT=$(
   prev_owner="" prev_repo=""
   while IFS=$'\t' read -r src repo branch; do
     owner="${repo%%/*} ($src)"
-    if [ "$owner" != "$prev_owner" ]; then printf '### %s\n\n' "$owner"; prev_owner=$owner; prev_repo=""; fi
-    if [ "$repo" != "$prev_repo" ]; then printf '#### %s\n\n' "${repo#*/}"; prev_repo=$repo; fi
-    printf '##### %s\n\n' "$branch"
+    if [ "$owner" != "$prev_owner" ]; then printf '### %s\n' "$owner"; prev_owner=$owner; prev_repo=""; fi
+    if [ "$repo" != "$prev_repo" ]; then printf '#### %s\n' "${repo#*/}"; prev_repo=$repo; fi
+    printf '##### %s\n' "$branch"
     awk -F'\t' -v s="$src" -v r="$repo" -v b="$branch" '$1 == s && $2 == r && $3 == b { print $4 " " $6 }' <<< "$COMMITS" \
-      | claude -p --model haiku "$PROMPT"
-    echo
+      | claude -p --model haiku "$PROMPT" | sed '/^[[:space:]]*$/d'
   done < <(cut -f1-3 <<< "$COMMITS" | awk '!seen[$0]++')
 )
 

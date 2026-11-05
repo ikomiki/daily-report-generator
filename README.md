@@ -8,11 +8,8 @@ GitHub と Bitbucket から期間内の自分のコミットを集め、ブラ�
 
 ```markdown
 ### ユーザ名または組織名 (GitHub / BitBucket)
-
 #### リポジトリ名
-
 ##### ブランチ名
-
 - 要約 (箇条書き)
 ```
 
@@ -44,7 +41,7 @@ GitHub と Bitbucket から期間内の自分のコミットを集め、ブラ�
 ### Bitbucket を対象にする場合
 
 - Bitbucket の API トークン (リポジトリの読み取り権限)。Bearer 認証で使う
-- 自分のコミットはコミットのメールアドレスで判定する。`git config --global user.email` と異なるアドレスでコミットしている場合は `BB_EMAIL` で指定する
+- 自分のコミットはコミットのメールアドレスで判定する。`git config --global user.email` と異なるアドレスでコミットしている場合は `BB_EMAIL` で指定する (空白区切りで複数指定可)
 
 ## 設定
 
@@ -60,6 +57,8 @@ GITHUB_ORGS=your-github-org
 # Bitbucket
 BITBUCKET_WORKSPACE=your-bitbucket-workspace
 BITBUCKET_API_TOKEN=<API トークン>
+# 複数指定するときは引用符で囲む (囲まないとシェルがコマンドとして実行しようとする)
+BB_EMAIL="a@example.com b@example.com"
 ```
 
 `.env` の値よりコマンドラインで渡した環境変数が優先される。
@@ -75,7 +74,7 @@ BITBUCKET_API_TOKEN=<API トークン>
 | `SINCE_EPOCH` | 集計開始時刻 (UNIX 秒) | 前日 3:00 JST |
 | `OBSIDIAN_HEADING` | 追記先の見出し名 (`.env` でも指定可) | `Yesterday's work` |
 | `DRY_RUN` | 値があれば Obsidian に追記せず表示のみ | なし |
-| `BB_EMAIL` | Bitbucket で自分と判定するメールアドレス | `git config --global user.email` |
+| `BB_EMAIL` | Bitbucket で自分と判定するメールアドレス (空白区切りで複数指定可。例: `"a@example.com b@example.com"`) | `git config --global user.email` |
 
 例: 月曜 3:00 JST 以降を、Obsidian に書かずに確認する
 
