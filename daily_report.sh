@@ -97,12 +97,11 @@ REPORT=$(
   prev_owner="" prev_repo=""
   while IFS=$'\t' read -r src repo branch; do
     owner="${repo%%/*} ($src)"
-    if [ "$owner" != "$prev_owner" ]; then printf '### %s\n\n' "$owner"; prev_owner=$owner; prev_repo=""; fi
-    if [ "$repo" != "$prev_repo" ]; then printf '#### %s\n\n' "${repo#*/}"; prev_repo=$repo; fi
-    printf '##### %s\n\n' "$branch"
+    if [ "$owner" != "$prev_owner" ]; then printf '### %s\n' "$owner"; prev_owner=$owner; prev_repo=""; fi
+    if [ "$repo" != "$prev_repo" ]; then printf '#### %s\n' "${repo#*/}"; prev_repo=$repo; fi
+    printf '##### %s\n' "$branch"
     awk -F'\t' -v s="$src" -v r="$repo" -v b="$branch" '$1 == s && $2 == r && $3 == b { print $4 " " $6 }' <<< "$COMMITS" \
-      | claude -p --model haiku "$PROMPT"
-    echo
+      | claude -p --model haiku "$PROMPT" | sed '/^[[:space:]]*$/d'
   done < <(cut -f1-3 <<< "$COMMITS" | awk '!seen[$0]++')
 )
 
